@@ -56,14 +56,18 @@ scripts (replayed on every invocation, exactly like Lima), and automatic
    wsl --update
    ```
 
-2. Clone this repo somewhere, e.g. `~\work\agent-vm-windows`.
+2. Clone this repo somewhere, e.g. `~\tools\agent-vm-windows`:
+
+   ```powershell
+   git clone https://github.com/skelz0r/agent-vm-windows $HOME\tools\agent-vm-windows
+   ```
 
 3. Dot-source the script from your PowerShell profile:
 
    ```powershell
    notepad $PROFILE
    # add this line:
-   . "$HOME\work\agent-vm-windows\agent-vm.ps1"
+   . "$HOME\tools\agent-vm-windows\agent-vm.ps1"
    ```
 
    Open a new terminal, then:
