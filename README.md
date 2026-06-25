@@ -31,7 +31,7 @@ agent-vm --offline claude     # block outbound internet
 | Lima VM (`limactl`) | WSL2 distro (`wsl.exe`) |
 | One VM **per directory** | One **shared** distro (`agent-vm`) for everything |
 | Bash function in `.zshrc` | PowerShell function dot-sourced in `$PROFILE` |
-| Debian 13 base | Ubuntu 24.04 |
+| Debian 13 base | Debian (same family as upstream) |
 | `--disk/--memory/--cpus` per VM | Global, via `%USERPROFILE%\.wslconfig` (these flags are ignored) |
 
 Everything else maps directly: `--offline` (iptables in the distro), the per-user
@@ -123,12 +123,12 @@ command-line compatibility but ignored, with a warning.)
 ## Known fragile bits (need Windows validation)
 
 - **Distro creation.** `agent-vm setup` uses
-  `wsl --install -d Ubuntu-24.04 --name agent-vm --no-launch`. On older WSL
-  builds `--name` may not exist. Fallback: download an Ubuntu WSL rootfs tarball
-  and import it manually:
+  `wsl --install -d Debian --name agent-vm --no-launch`. On older WSL builds
+  `--name` may not exist. Fallback: download a Debian WSL rootfs tarball and
+  import it manually:
 
   ```powershell
-  wsl --import agent-vm "$HOME\wsl\agent-vm" path\to\ubuntu-rootfs.tar
+  wsl --import agent-vm "$HOME\wsl\agent-vm" path\to\debian-rootfs.tar
   ```
 
   then run the provisioning script:

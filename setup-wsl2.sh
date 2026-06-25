@@ -29,16 +29,10 @@ systemd=true
 default=${AGENT_USER}
 EOF
 
-# Create the agent user with passwordless sudo if it does not exist yet.
-if ! id "$AGENT_USER" &>/dev/null; then
-  useradd -m -s /usr/bin/zsh "$AGENT_USER" || useradd -m "$AGENT_USER"
-fi
-echo "${AGENT_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/agent-vm
-chmod 0440 /etc/sudoers.d/agent-vm
-
 echo "==> Installing base packages..."
 apt-get update
 apt-get install -y \
+  sudo \
   git curl jq zsh \
   wget build-essential \
   python3 python3-pip python3-venv \
@@ -48,11 +42,20 @@ apt-get install -y \
   iptables \
   libssl-dev libreadline-dev zlib1g-dev libyaml-dev libffi-dev
 
+# Create the agent user with passwordless sudo. Done AFTER the base packages so
+# that zsh (the login shell) and sudo (which owns /etc/sudoers.d) both exist.
+echo "==> Creating '${AGENT_USER}' user..."
+if ! id "$AGENT_USER" &>/dev/null; then
+  useradd -m -s /usr/bin/zsh "$AGENT_USER"
+fi
+echo "${AGENT_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/agent-vm
+chmod 0440 /etc/sudoers.d/agent-vm
+
 echo "==> Installing Docker (runs as a systemd service after restart)..."
 install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
 chmod a+r /etc/apt/keyrings/docker.asc
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
 apt-get update
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 usermod -aG docker "$AGENT_USER"
@@ -63,11 +66,10 @@ curl -fsSL https://deb.nodesource.com/setup_24.x | bash -
 apt-get install -y nodejs
 
 echo "==> Installing Chromium (headless browsing)..."
-apt-get install -y chromium-browser fonts-liberation xvfb 2>/dev/null \
-  || apt-get install -y chromium fonts-liberation xvfb
-CHROMIUM_BIN="$(command -v chromium || command -v chromium-browser || echo /usr/bin/chromium)"
-ln -sf "$CHROMIUM_BIN" /usr/bin/google-chrome || true
-ln -sf "$CHROMIUM_BIN" /usr/bin/google-chrome-stable || true
+# Debian ships a real 'chromium' apt package (unlike Ubuntu, where it is a snap).
+apt-get install -y chromium fonts-liberation xvfb
+ln -sf /usr/bin/chromium /usr/bin/google-chrome || true
+ln -sf /usr/bin/chromium /usr/bin/google-chrome-stable || true
 
 echo "==> Installing GitHub CLI..."
 mkdir -p -m 755 /etc/apt/keyrings

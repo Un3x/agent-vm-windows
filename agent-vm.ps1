@@ -117,10 +117,12 @@ function script:Ensure-AgentVmRunning {
 
 function script:New-AgentVmDistro {
     Write-Host "Creating WSL distro '$($script:AgentVmDistro)'..."
-    # Requires a recent WSL (run 'wsl --update'). --name keeps this distro
-    # isolated from any Ubuntu you already use. If --name is unsupported on your
-    # build, see the manual `wsl --import` fallback in README.md.
-    & wsl.exe --install -d Ubuntu-24.04 --name $script:AgentVmDistro --no-launch | Out-Host
+    # Debian matches upstream agent-vm's base (template:debian-13) and avoids the
+    # Ubuntu/snap chromium issue (no snap in WSL). Requires a recent WSL (run
+    # 'wsl --update'). --name keeps this distro isolated from any Debian you
+    # already use. If --name is unsupported on your build, see the manual
+    # `wsl --import` fallback in README.md.
+    & wsl.exe --install -d Debian --name $script:AgentVmDistro --no-launch | Out-Host
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to create the distro. Try 'wsl --update', or use the wsl --import fallback (README.md)."
         return $false
