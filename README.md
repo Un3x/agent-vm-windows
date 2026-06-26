@@ -49,12 +49,18 @@ scripts (replayed on every invocation, exactly like Lima), and automatic
 
 ## Install
 
-1. Install WSL2 (once), then reboot:
+1. Install WSL2 (once):
 
    ```powershell
    wsl --install --no-distribution
    wsl --update
    ```
+
+   > ⚠️ **Reboot Windows now, before continuing.** WSL is enabled as a Windows
+   > feature and does **not** work until you reboot. Skipping this is the most
+   > common setup failure: `agent-vm setup` will appear to succeed but then fail
+   > with `WSL_E_DISTRO_NOT_FOUND`, because the distro can't register until WSL
+   > is active.
 
 2. Clone this repo somewhere, e.g. `~\tools\agent-vm-windows`:
 
@@ -95,6 +101,11 @@ scripts (replayed on every invocation, exactly like Lima), and automatic
 
    This creates the `agent-vm` distro, provisions it (Docker, Node 24, mise,
    Claude, Codex, gh, Chromium…), and restarts it to activate systemd.
+
+   > ⚠️ **If `agent-vm setup` tells you to reboot, reboot and run it again.**
+   > The first time WSL is enabled on a machine, distro registration is deferred
+   > until a reboot — this is expected, just run `agent-vm setup` once more
+   > afterwards.
 
 ## Usage
 
