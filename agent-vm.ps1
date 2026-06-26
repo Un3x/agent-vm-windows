@@ -127,6 +127,14 @@ function script:New-AgentVmDistro {
         Write-Error "Failed to create the distro. Try 'wsl --update', or use the wsl --import fallback (README.md)."
         return $false
     }
+    # `wsl --install` can report success but defer the work: when WSL itself was
+    # just enabled it asks for a reboot, and the distro is not registered yet.
+    # Verify before provisioning, otherwise the next step fails with the opaque
+    # WSL_E_DISTRO_NOT_FOUND instead of an actionable message.
+    if (-not (script:Test-AgentVmDistroExists)) {
+        Write-Warning "WSL reported success but '$($script:AgentVmDistro)' is not registered yet. Windows needs to reboot to finish enabling WSL. Reboot, then run 'agent-vm setup' again."
+        return $false
+    }
     return $true
 }
 
