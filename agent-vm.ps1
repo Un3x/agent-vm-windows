@@ -282,7 +282,7 @@ function agent-vm {
         "status" {
             Write-Host "agent-vm distro: $($script:AgentVmDistro)"
             if (script:Test-AgentVmDistroExists) { & wsl.exe -l -v | Select-String -SimpleMatch $script:AgentVmDistro }
-            else { Write-Host "(not created — run 'agent-vm setup')" }
+            else { Write-Host "(not created - run 'agent-vm setup')" }
         }
         { $_ -in @("help","--help","-h") } { script:Show-AgentVmHelp }
         default {
