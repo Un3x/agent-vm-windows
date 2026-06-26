@@ -1,0 +1,6 @@
+# Shell scripts are piped into the WSL distro and run by bash/zsh, which break
+# on CRLF. Force LF regardless of the contributor's core.autocrlf setting.
+*.sh text eol=lf
+
+# PowerShell is fine with either; keep it native on Windows.
+*.ps1 text

@@ -65,7 +65,8 @@ function script:Invoke-AgentVmRuntime {
     $proj = Join-Path $CwdWin ".agent-vm.runtime.sh"
     if (Test-Path -LiteralPath $proj) {
         Write-Host "Running project runtime setup..."
-        Get-Content -Raw -LiteralPath $proj | & wsl.exe -d $script:AgentVmDistro --cd $CwdWin -- zsh -l | Out-Host
+        $body = (Get-Content -Raw -LiteralPath $proj) -replace "`r`n", "`n"
+        $body | & wsl.exe -d $script:AgentVmDistro --cd $CwdWin -- zsh -l | Out-Host
     }
 }
 
@@ -146,8 +147,11 @@ function script:Invoke-AgentVmProvision {
     }
     Write-Host "Provisioning the distro (this takes a while the first time)..."
     # Run as root so the script can create the 'agent' user, enable systemd and
-    # install packages without an interactive sudo password.
-    Get-Content -Raw -LiteralPath $setup | & wsl.exe -d $script:AgentVmDistro -u root -- bash -l | Out-Host
+    # install packages without an interactive sudo password. Strip CR first:
+    # Git for Windows checks scripts out as CRLF by default, and bash treats the
+    # trailing \r as part of each command ($'\r': command not found).
+    $body = (Get-Content -Raw -LiteralPath $setup) -replace "`r`n", "`n"
+    $body | & wsl.exe -d $script:AgentVmDistro -u root -- bash -l | Out-Host
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Provisioning failed."
         return $false
