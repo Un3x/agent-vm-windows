@@ -62,13 +62,30 @@ scripts (replayed on every invocation, exactly like Lima), and automatic
    git clone https://github.com/skelz0r/agent-vm-windows $HOME\tools\agent-vm-windows
    ```
 
-3. Dot-source the script from your PowerShell profile:
+3. Allow locally-created scripts to run (once, current user only — no admin
+   needed):
 
    ```powershell
+   Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+   ```
+
+   Windows ships with PowerShell script execution disabled by default, which
+   blocks the profile from dot-sourcing `agent-vm.ps1`. `RemoteSigned` enables
+   local scripts (like your profile) while still blocking unsigned scripts
+   downloaded from the internet.
+
+4. Dot-source the script from your PowerShell profile. The profile file often
+   does not exist yet on a fresh machine — create it first if needed:
+
+   ```powershell
+   if (!(Test-Path $PROFILE)) { New-Item -Path $PROFILE -ItemType File -Force }
    notepad $PROFILE
    # add this line:
    . "$HOME\tools\agent-vm-windows\agent-vm.ps1"
    ```
+
+   > The `Test-Path` guard matters: `New-Item -Force` on an **existing** profile
+   > would overwrite it and wipe your current setup.
 
    Open a new terminal, then:
 
