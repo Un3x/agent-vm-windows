@@ -146,12 +146,17 @@ function script:Invoke-AgentVmProvision {
         return $false
     }
     Write-Host "Provisioning the distro (this takes a while the first time)..."
-    # Run as root so the script can create the 'agent' user, enable systemd and
-    # install packages without an interactive sudo password. Strip CR first:
-    # Git for Windows checks scripts out as CRLF by default, and bash treats the
-    # trailing \r as part of each command ($'\r': command not found).
-    $body = (Get-Content -Raw -LiteralPath $setup) -replace "`r`n", "`n"
-    $body | & wsl.exe -d $script:AgentVmDistro -u root -- bash -l | Out-Host
+    # Read and run the script *inside* the distro as root, stripping CR with tr.
+    # Feeding it over PowerShell's stdin is unreliable on Windows: Git checks the
+    # script out as CRLF, and PowerShell also appends its own CRLF terminator,
+    # leaving stray \r that break bash ($'\r': command not found). Reading the
+    # file directly in WSL and running it through `tr -d '\r'` avoids both.
+    $setupWsl = (& wsl.exe -d $script:AgentVmDistro -u root wslpath -u "$setup" 2>$null | Select-Object -First 1)
+    if (-not $setupWsl) {
+        Write-Error "Could not resolve the WSL path for setup-wsl2.sh."
+        return $false
+    }
+    & wsl.exe -d $script:AgentVmDistro -u root -- bash -lc "tr -d '\r' < '$($setupWsl.Trim())' | bash -l" | Out-Host
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Provisioning failed."
         return $false
